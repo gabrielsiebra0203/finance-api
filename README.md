@@ -32,6 +32,11 @@ O projeto foi criado como parte dos meus estudos de desenvolvimento backend com 
 - Padronizar respostas com schemas Pydantic
 - Documentar endpoints automaticamente com OpenAPI
 - Executar testes automatizados com banco isolado e rollback
+- Filtrar transações por tipo (receita ou despesa)
+- Filtrar transações por categoria
+- Filtrar transações por valor mínimo e máximo
+- Combinar múltiplos filtros em uma consulta
+- Validar parâmetros de consulta e intervalos monetários
 
 ## Estrutura do projeto
 
@@ -198,6 +203,49 @@ http://localhost:8001/openapi.json
 | PUT | `/transacoes/{transacao_id}` | Atualizar transação |
 | DELETE | `/transacoes/{transacao_id}` | Excluir transação |
 
+## Filtros de transações
+
+O endpoint `GET /transacoes` permite consultar transações utilizando filtros opcionais.
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `tipo` | string | `receita` ou `despesa` |
+| `categoria` | string | Categoria da transação |
+| `valor_min` | decimal | Valor mínimo, inclusive |
+| `valor_max` | decimal | Valor máximo, inclusive |
+
+### Exemplos
+
+**Filtrar despesas:**
+
+```http
+GET /transacoes?tipo=despesa
+```
+
+**Filtrar por categoria:**
+
+```http
+GET /transacoes?categoria=Alimentação
+```
+
+**Filtrar por intervalo de valores:**
+
+```http
+GET /transacoes?valor_min=100&valor_max=500
+```
+
+**Combinar todos os filtros:**
+
+```http
+GET /transacoes?tipo=despesa&categoria=Alimentação&valor_min=100&valor_max=500
+```
+
+Os filtros são opcionais e podem ser combinados.
+
+O endpoint retorna HTTP `422` quando recebe parâmetros inválidos, incluindo valores negativos, tipos não permitidos e intervalos em que `valor_min` é maior que `valor_max`.
+
+Consultas válidas sem correspondências retornam HTTP `200`, com `total: 0` e uma lista vazia.
+
 ## Exemplo de cadastro
 
 **POST `/transacoes`**
@@ -250,7 +298,7 @@ Os schemas de saída utilizam a serialização do Pydantic, integrada ao FastAPI
 
 ## Testes automatizados
 
-O projeto possui **38 testes automatizados**, cobrindo:
+O projeto possui **49 testes automatizados**, cobrindo:
 
 - Endpoints REST
 - Operações CRUD
@@ -260,6 +308,7 @@ O projeto possui **38 testes automatizados**, cobrindo:
 - Categorias financeiras
 - Contratos de resposta
 - Documentação OpenAPI
+- Filtros finaceiros e funcionalidades testadas
 
 Para executar todos os testes:
 

@@ -1,5 +1,6 @@
-
-from fastapi import APIRouter, HTTPException, status
+from typing import Literal
+from decimal import Decimal
+from fastapi import APIRouter, HTTPException, status, Depends, Query
 
 
 from app.models import (
@@ -8,7 +9,6 @@ from app.models import (
     ListaTransacoesSaida,
 )
 
-from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -28,8 +28,57 @@ router = APIRouter(
     summary="Listar transações",
     description="Retorna todas as transações financeiras cadastradas."
 )
-def listar_transacoes(db: Session = Depends(get_db)):
-    comando = select(Transacao).order_by(Transacao.id)
+
+
+
+def listar_transacoes(
+    tipo: Literal["receita", "despesa"] | None = Query(
+        default=None,
+        description="Filtrar transações por receita ou despesa"
+    ),
+    categoria: str | None = Query(
+        default=None,
+        min_length=1,
+        max_length=50,
+        description="Filtrar transações por categoria"
+    ),
+    valor_min: Decimal | None = Query(
+        default=None,
+        ge=Decimal("0"),
+        description="Valor mínimo da transação"
+    ),
+    valor_max: Decimal | None = Query(
+        default=None,
+        ge=Decimal("0"),
+        description="Valor máximo da transação"
+    ),
+    db: Session = Depends(get_db)
+):
+    if (
+        valor_min is not None
+        and valor_max is not None
+        and valor_min > valor_max
+):
+        raise HTTPException(
+            status_code=422,
+            detail="O valor mínimo não pode ser maior que o valor máximo"
+    )
+
+    comando = select(Transacao)
+
+    if tipo is not None:
+        comando = comando.where(Transacao.tipo == tipo)
+
+    if categoria is not None:
+        comando = comando.where(Transacao.categoria == categoria)
+
+    if valor_min is not None:
+        comando = comando.where(Transacao.valor >= valor_min)
+
+    if valor_max is not None:
+        comando = comando.where(Transacao.valor <= valor_max)
+
+    comando = comando.order_by(Transacao.id)
 
     transacoes_db = db.scalars(comando).all()
 
@@ -37,6 +86,8 @@ def listar_transacoes(db: Session = Depends(get_db)):
         "total": len(transacoes_db),
         "transacoes": transacoes_db
     }
+
+
 
 
 
