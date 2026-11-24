@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Literal
+from decimal import Decimal
 
 # Inicialização da aplicação
 app = FastAPI(
@@ -65,9 +66,14 @@ def listar_transacoes():
 
 # Modelo para receber os dados de uma nova transação
 class TransacaoEntrada(BaseModel):
-    descricao: str = Field(min_length=1)
-    valor: float = Field(gt=0)
+    descricao: str = Field(min_length=1, max_length=100)
+    valor: Decimal = Field(
+        gt=Decimal("0"),
+        max_digits=12,
+        decimal_places=2
+    )
     tipo: Literal["receita", "despesa"]
+
 
 
 # Cadastrar uma nova transação

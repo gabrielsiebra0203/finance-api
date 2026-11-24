@@ -1,35 +1,31 @@
 
-from fastapi.testclient import TestClient
-from app.main import app
-
-client = TestClient(app)
 
 
-def test_pagina_inicial():
+def test_pagina_inicial(client):
     resposta = client.get("/")
 
     assert resposta.status_code == 200
     assert resposta.json()["status"] == "online"
 
 
-def test_healthcheck():
+def test_healthcheck(client):
     resposta = client.get("/health")
 
     assert resposta.status_code == 200
     assert resposta.json()["status"] == "ok"
 
 
-def test_rota_inexistente():
+def test_rota_inexistente(client):
     resposta = client.get("/rota-inexistente")
 
     assert resposta.status_code == 404
-def test_sobre():
+def test_sobre(client):
     resposta = client.get("/sobre")
 
     assert resposta.status_code == 200
     assert resposta.json()["projeto"] == "Finance API"
 
-def test_listar_transacoes():
+def test_listar_transacoes(client):
     resposta = client.get("/transacoes")
 
     assert resposta.status_code == 200
@@ -37,7 +33,7 @@ def test_listar_transacoes():
     assert len(resposta.json()["transacoes"]) == 2  
 
 
-def test_criar_transacao():
+def test_criar_transacao(client):
     dados = {
         "descricao": "Conta de energia",
         "valor": 180.50,
@@ -53,7 +49,7 @@ def test_criar_transacao():
     assert isinstance(resposta.json()["id"], int)
 
 
-def test_buscar_transacao_existente():
+def test_buscar_transacao_existente(client):
     resposta = client.get("/transacoes/1")
 
     assert resposta.status_code == 200
@@ -61,14 +57,14 @@ def test_buscar_transacao_existente():
     assert resposta.json()["descricao"] == "Salário"
 
 
-def test_buscar_transacao_inexistente():
+def test_buscar_transacao_inexistente(client):
     resposta = client.get("/transacoes/9999")
 
     assert resposta.status_code == 404
     assert resposta.json()["detail"] == "Transação não encontrada"
 
 
-def test_atualizar_transacao():
+def test_atualizar_transacao(client):
     dados = {
         "descricao": "Supermercado",
         "valor": 280.00,
@@ -85,7 +81,7 @@ def test_atualizar_transacao():
     assert consulta.json()["valor"] == 280.00
 
 
-def test_atualizar_transacao_inexistente():
+def test_atualizar_transacao_inexistente(client):
     dados = {
         "descricao": "Despesa inexistente",
         "valor": 100.00,
@@ -98,7 +94,7 @@ def test_atualizar_transacao_inexistente():
     assert resposta.json()["detail"] == "Transação não encontrada"
 
 
-def test_excluir_transacao():
+def test_excluir_transacao(client):
     # Primeiro cria uma transação exclusiva para o teste
     dados = {
         "descricao": "Transação para excluir",
@@ -124,7 +120,7 @@ def test_excluir_transacao():
     assert consulta.status_code == 404
 
 
-def test_excluir_transacao_inexistente():
+def test_excluir_transacao_inexistente(client):
     resposta = client.delete("/transacoes/9999")
 
     assert resposta.status_code == 404
