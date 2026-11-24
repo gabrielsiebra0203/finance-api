@@ -42,6 +42,33 @@ O projeto foi criado como parte dos meus estudos de desenvolvimento backend com 
 - Metadados de paginação (`total`, `limit`, `offset`, `tem_proxima`)
 - Paginação combinada com filtros de tipo, categoria e valores
 - Validação automática dos parâmetros de paginação
+### Ordenação de transações
+
+A API permite ordenar transações pelos seguintes campos:
+
+- `id`: identificador da transação
+- `valor`: valor financeiro
+- `descricao`: descrição da transação
+
+A direção pode ser:
+
+- `asc`: ordem crescente (padrão)
+- `desc`: ordem decrescente
+
+Exemplos:
+
+GET /transacoes?ordenar_por=valor&ordem=desc
+
+GET /transacoes?ordenar_por=descricao&ordem=asc
+
+GET /transacoes?tipo=despesa&ordenar_por=valor&ordem=desc&limit=5&offset=0
+
+A ordenação pode ser combinada com filtros e paginação.
+
+Parâmetros inválidos retornam HTTP 422.
+
+Quando não são informados parâmetros de ordenação,
+a API utiliza `id` em ordem crescente.
 
 ## Estrutura do projeto
 
@@ -379,7 +406,7 @@ Os schemas de saída utilizam a serialização do Pydantic, integrada ao FastAPI
 
 ## Testes automatizados
 
-O projeto possui **54 testes automatizados**, cobrindo:
+O projeto possui **61 testes automatizados**, cobrindo:
 
 - Endpoints REST
 - Operações CRUD

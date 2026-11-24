@@ -63,7 +63,19 @@ def listar_transacoes(
         ge=0,
         description="Quantidade de transações ignoradas"
     ),
+    
+    ordenar_por: Literal["id", "valor", "descricao"] = Query(
+        default="id",
+        description="Campo utilizado para ordenar as transações"
+    ),
+
+    ordem: Literal["asc", "desc"] = Query(
+        default="asc",
+        description="Direção da ordenação: crescente ou decrescente"
+    ),
+
     db: Session = Depends(get_db)
+
 ):
     if (
         valor_min is not None
@@ -97,7 +109,25 @@ def listar_transacoes(
     total = db.scalar(comando_contagem)
 
     # Ordena os registros para a paginação
-    comando = comando.order_by(Transacao.id)
+    
+    campos_ordenacao = {
+        "id": Transacao.id,
+        "valor": Transacao.valor,
+        "descricao": Transacao.descricao
+    }
+
+    campo_selecionado = campos_ordenacao[ordenar_por]
+
+    if ordem == "desc":
+        campo_ordenado = campo_selecionado.desc()
+    else:
+        campo_ordenado = campo_selecionado.asc()
+
+    comando = comando.order_by(
+        campo_ordenado,
+        Transacao.id.asc()
+    )
+
 
     # Ignora os primeiros registros
     comando = comando.offset(offset)
