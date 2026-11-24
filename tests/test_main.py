@@ -25,12 +25,14 @@ def test_sobre(client):
     assert resposta.status_code == 200
     assert resposta.json()["projeto"] == "Finance API"
 
+
 def test_listar_transacoes(client):
     resposta = client.get("/transacoes")
 
     assert resposta.status_code == 200
-    assert resposta.json()["total"] == 2
-    assert len(resposta.json()["transacoes"]) == 2  
+    assert resposta.json()["total"] == 0
+    assert resposta.json()["transacoes"] == []
+
 
 
 def test_criar_transacao(client):
@@ -49,12 +51,26 @@ def test_criar_transacao(client):
     assert isinstance(resposta.json()["id"], int)
 
 
+
 def test_buscar_transacao_existente(client):
-    resposta = client.get("/transacoes/1")
+    dados = {
+        "descricao": "Salário",
+        "valor": "3000.00",
+        "tipo": "receita"
+    }
+
+    criacao = client.post("/transacoes", json=dados)
+
+    assert criacao.status_code == 201
+
+    transacao_id = criacao.json()["id"]
+
+    resposta = client.get(f"/transacoes/{transacao_id}")
 
     assert resposta.status_code == 200
-    assert resposta.json()["id"] == 1
+    assert resposta.json()["id"] == transacao_id
     assert resposta.json()["descricao"] == "Salário"
+
 
 
 def test_buscar_transacao_inexistente(client):
@@ -64,21 +80,45 @@ def test_buscar_transacao_inexistente(client):
     assert resposta.json()["detail"] == "Transação não encontrada"
 
 
+
 def test_atualizar_transacao(client):
+    # Criar uma transação para atualizar
+    criacao = client.post(
+        "/transacoes",
+        json={
+            "descricao": "Compra inicial",
+            "valor": "200.00",
+            "tipo": "despesa"
+        }
+    )
+
+    assert criacao.status_code == 201
+
+    transacao_id = criacao.json()["id"]
+
+    # Atualizar a transação
     dados = {
         "descricao": "Supermercado",
-        "valor": 280.00,
+        "valor": "280.00",
         "tipo": "despesa"
     }
 
-    resposta = client.put("/transacoes/2", json=dados)
+    resposta = client.put(
+        f"/transacoes/{transacao_id}",
+        json=dados
+    )
 
     assert resposta.status_code == 200
-    assert resposta.json()["id"] == 2
-    assert resposta.json()["valor"] == 280.00
+    assert resposta.json()["id"] == transacao_id
+    assert resposta.json()["descricao"] == "Supermercado"
+    assert float(resposta.json()["valor"]) == 280.00
 
-    consulta = client.get("/transacoes/2")
-    assert consulta.json()["valor"] == 280.00
+    # Confirmar que a atualização foi salva
+    consulta = client.get(f"/transacoes/{transacao_id}")
+
+    assert consulta.status_code == 200
+    assert float(consulta.json()["valor"]) == 280.00
+
 
 
 def test_atualizar_transacao_inexistente(client):
