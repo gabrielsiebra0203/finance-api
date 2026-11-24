@@ -7,7 +7,9 @@ from app.models import (
     TransacaoEntrada,
     TransacaoSaida,
     ListaTransacoesSaida,
+    ResumoFinanceiroSaida,
 )
+from app.services.resumo_financeiro import calcular_resumo_financeiro
 
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
@@ -180,6 +182,17 @@ def criar_transacao(
     return nova_transacao
 
 
+
+@router.get(
+    "/resumo",
+    response_model=ResumoFinanceiroSaida,
+    summary="Consultar resumo financeiro",
+    description="Retorna o total de receitas, despesas e saldo financeiro."
+)
+def obter_resumo_financeiro(
+    db: Session = Depends(get_db)
+):
+    return calcular_resumo_financeiro(db)
 
 
 @router.get(

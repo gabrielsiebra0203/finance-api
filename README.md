@@ -69,6 +69,50 @@ Parâmetros inválidos retornam HTTP 422.
 
 Quando não são informados parâmetros de ordenação,
 a API utiliza `id` em ordem crescente.
+### Resumo financeiro
+
+A Finance API disponibiliza um endpoint para consultar os principais indicadores financeiros.
+
+**Endpoint:**
+
+`GET /transacoes/resumo`
+
+**Exemplo de resposta:**
+
+```json
+{
+  "total_receitas": "4300.00",
+  "total_despesas": "1750.00",
+  "saldo": "2550.00"
+}
+```
+
+**Indicadores:**
+
+- `total_receitas`: soma de todas as receitas cadastradas.
+- `total_despesas`: soma de todas as despesas cadastradas.
+- `saldo`: diferença entre receitas e despesas.
+
+**Implementação técnica:**
+
+- FastAPI para disponibilização do endpoint.
+- SQLAlchemy para construção das consultas.
+- PostgreSQL para armazenamento e agregação dos dados.
+- Função SQL `SUM()` para cálculo dos totais.
+- `Decimal` para precisão monetária.
+- Pydantic para validação e serialização da resposta.
+- Camada de serviços separada das rotas HTTP.
+
+**Testes automatizados:**
+
+O resumo financeiro possui testes para os seguintes cenários:
+
+- Banco sem transações.
+- Apenas receitas cadastradas.
+- Apenas despesas cadastradas.
+- Receitas e despesas combinadas.
+
+**Total do projeto: 65 testes automatizados.**
 
 ## Estrutura do projeto
 

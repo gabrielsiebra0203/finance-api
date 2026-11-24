@@ -43,3 +43,10 @@ class ListaTransacoesSaida(BaseModel):
     offset: int = 0
     tem_proxima: bool = False
     transacoes: list[TransacaoSaida]
+
+
+class ResumoFinanceiroSaida(BaseModel):
+    total_receitas: Decimal
+    total_despesas: Decimal
+    saldo: Decimal
+
