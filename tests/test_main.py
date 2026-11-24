@@ -38,7 +38,7 @@ def test_listar_transacoes(client):
 def test_criar_transacao(client):
     dados = {
         "descricao": "Conta de energia",
-        "valor": 180.50,
+        "valor": "180.50",
         "tipo": "despesa"
     }
 
@@ -46,7 +46,7 @@ def test_criar_transacao(client):
 
     assert resposta.status_code == 201
     assert resposta.json()["descricao"] == "Conta de energia"
-    assert resposta.json()["valor"] == 180.50
+    assert resposta.json()["valor"] == "180.50"
     assert resposta.json()["tipo"] == "despesa"
     assert isinstance(resposta.json()["id"], int)
 
@@ -111,7 +111,7 @@ def test_atualizar_transacao(client):
     assert resposta.status_code == 200
     assert resposta.json()["id"] == transacao_id
     assert resposta.json()["descricao"] == "Supermercado"
-    assert float(resposta.json()["valor"]) == 280.00
+    assert resposta.json()["valor"] == "280.00"
 
     # Confirmar que a atualização foi salva
     consulta = client.get(f"/transacoes/{transacao_id}")

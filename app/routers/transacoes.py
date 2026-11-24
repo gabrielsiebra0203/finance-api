@@ -1,7 +1,13 @@
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.models import TransacaoEntrada
+
+from app.models import (
+    TransacaoEntrada,
+    TransacaoSaida,
+    ListaTransacoesSaida,
+)
+
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -16,7 +22,12 @@ router = APIRouter(
 
 
 
-@router.get("")
+@router.get(
+    "",
+    response_model=ListaTransacoesSaida,
+    summary="Listar transações",
+    description="Retorna todas as transações financeiras cadastradas."
+)
 def listar_transacoes(db: Session = Depends(get_db)):
     comando = select(Transacao).order_by(Transacao.id)
 
@@ -30,7 +41,15 @@ def listar_transacoes(db: Session = Depends(get_db)):
 
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "",
+    response_model=TransacaoSaida,
+    status_code=status.HTTP_201_CREATED,
+    summary="Criar transação",
+    description="Cadastra uma receita ou despesa no banco de dados."
+)
+
 def criar_transacao(
     transacao: TransacaoEntrada,
     db: Session = Depends(get_db)
@@ -48,7 +67,12 @@ def criar_transacao(
 
 
 
-@router.get("/{transacao_id}")
+@router.get(
+    "/{transacao_id}",
+    response_model=TransacaoSaida,
+    summary="Buscar transação",
+    description="Consulta uma transação financeira pelo seu identificador."
+)
 def buscar_transacao(
     transacao_id: int,
     db: Session = Depends(get_db)
@@ -66,7 +90,12 @@ def buscar_transacao(
 
 
 
-@router.put("/{transacao_id}")
+@router.put(
+    "/{transacao_id}",
+    response_model=TransacaoSaida,
+    summary="Atualizar transação",
+    description="Atualiza os dados de uma transação financeira existente."
+)
 def atualizar_transacao(
     transacao_id: int,
     dados: TransacaoEntrada,
@@ -93,7 +122,11 @@ def atualizar_transacao(
 
 
 
-@router.delete("/{transacao_id}")
+@router.delete(
+    "/{transacao_id}",
+    summary="Excluir transação",
+    description="Remove uma transação financeira pelo seu identificador."
+)
 def excluir_transacao(
     transacao_id: int,
     db: Session = Depends(get_db)

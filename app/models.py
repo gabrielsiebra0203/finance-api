@@ -2,7 +2,7 @@
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TransacaoEntrada(BaseModel):
@@ -24,3 +24,18 @@ class TransacaoEntrada(BaseModel):
         min_length=1,
         max_length=50
     )
+
+
+class TransacaoSaida(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    descricao: str
+    valor: Decimal
+    tipo: Literal["receita", "despesa"]
+    categoria: str | None = None
+
+
+class ListaTransacoesSaida(BaseModel):
+    total: int
+    transacoes: list[TransacaoSaida]
