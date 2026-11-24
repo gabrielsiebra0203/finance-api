@@ -36,6 +36,10 @@ class TransacaoSaida(BaseModel):
     categoria: str | None = None
 
 
+
 class ListaTransacoesSaida(BaseModel):
     total: int
+    limit: int | None = None
+    offset: int = 0
+    tem_proxima: bool = False
     transacoes: list[TransacaoSaida]

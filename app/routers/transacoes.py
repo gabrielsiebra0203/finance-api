@@ -9,7 +9,7 @@ from app.models import (
     ListaTransacoesSaida,
 )
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from app.db_connection import get_db
@@ -52,6 +52,17 @@ def listar_transacoes(
         ge=Decimal("0"),
         description="Valor máximo da transação"
     ),
+    limit: int | None = Query(
+        default=None,
+        ge=1,
+        le=100,
+        description="Quantidade máxima de transações retornadas"
+    ),
+    offset: int = Query(
+        default=0,
+        ge=0,
+        description="Quantidade de transações ignoradas"
+    ),
     db: Session = Depends(get_db)
 ):
     if (
@@ -78,12 +89,35 @@ def listar_transacoes(
     if valor_max is not None:
         comando = comando.where(Transacao.valor <= valor_max)
 
+    # Conta os registros após aplicar os filtros
+    comando_contagem = select(func.count()).select_from(
+        comando.order_by(None).subquery()
+    )
+
+    total = db.scalar(comando_contagem)
+
+    # Ordena os registros para a paginação
     comando = comando.order_by(Transacao.id)
 
+    # Ignora os primeiros registros
+    comando = comando.offset(offset)
+
+    # Limita a quantidade retornada, quando solicitado
+    if limit is not None:
+        comando = comando.limit(limit)
+
+    
     transacoes_db = db.scalars(comando).all()
 
+    tem_proxima = (
+        offset + len(transacoes_db) < total
+    )
+
     return {
-        "total": len(transacoes_db),
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "tem_proxima": tem_proxima,
         "transacoes": transacoes_db
     }
 

@@ -291,6 +291,9 @@ def test_filtro_sem_resultados(client):
 
     assert resposta.status_code == 200
     assert resposta.json() == {
-        "total": 0,
-        "transacoes": []
-    }
+    "total": 0,
+    "limit": None,
+    "offset": 0,
+    "tem_proxima": False,
+    "transacoes": []
+}

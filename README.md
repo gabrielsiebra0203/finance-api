@@ -37,6 +37,11 @@ O projeto foi criado como parte dos meus estudos de desenvolvimento backend com 
 - Filtrar transações por valor mínimo e máximo
 - Combinar múltiplos filtros em uma consulta
 - Validar parâmetros de consulta e intervalos monetários
+- Paginação de transações com `limit` e `offset`
+- Contagem otimizada com `COUNT(*)` no PostgreSQL
+- Metadados de paginação (`total`, `limit`, `offset`, `tem_proxima`)
+- Paginação combinada com filtros de tipo, categoria e valores
+- Validação automática dos parâmetros de paginação
 
 ## Estrutura do projeto
 
@@ -214,6 +219,82 @@ O endpoint `GET /transacoes` permite consultar transações utilizando filtros o
 | `valor_min` | decimal | Valor mínimo, inclusive |
 | `valor_max` | decimal | Valor máximo, inclusive |
 
+## Paginação de transações
+
+O endpoint `GET /transacoes` permite consultar transações financeiras utilizando paginação e filtros dinâmicos.
+
+### Parâmetros
+
+| Parâmetro | Tipo | Descrição |
+|---|---|---|
+| `limit` | int (opcional) | Quantidade máxima de registros retornados, entre 1 e 100 |
+| `offset` | int | Quantidade de registros ignorados. Padrão: 0 |
+
+Quando `limit` não é informado, todas as transações correspondentes aos filtros são retornadas.
+
+### Exemplos de requisições
+
+**Primeira página:**
+
+```http
+GET /transacoes?limit=5&offset=0
+```
+
+**Segunda página:**
+
+```http
+GET /transacoes?limit=5&offset=5
+```
+
+**Paginação com filtros combinados:**
+
+```http
+GET /transacoes?tipo=despesa&valor_min=50&valor_max=500&limit=5&offset=0
+```
+
+### Exemplo de resposta
+
+```json
+{
+  "total": 12,
+  "limit": 2,
+  "offset": 0,
+  "tem_proxima": true,
+  "transacoes": [
+    {
+      "id": 1,
+      "descricao": "Supermercado",
+      "valor": "250.00",
+      "tipo": "despesa",
+      "categoria": "Alimentação"
+    },
+    {
+      "id": 2,
+      "descricao": "Transporte",
+      "valor": "50.00",
+      "tipo": "despesa",
+      "categoria": "Transporte"
+    }
+  ]
+}
+```
+
+O campo `total` representa a quantidade de registros que correspondem aos filtros antes da paginação.
+
+O campo `tem_proxima` indica se existem mais registros após a página atual.
+
+A contagem utiliza `COUNT(*)` no PostgreSQL, evitando carregar todos os registros na memória da aplicação.
+
+### Validações
+
+A API retorna HTTP 422 quando:
+
+- `limit` é menor que 1 ou maior que 100.
+- `offset` é negativo.
+- Os parâmetros recebem valores incompatíveis com seus tipos.
+
+Quando o `offset` ultrapassa a quantidade de registros encontrados, a API retorna HTTP 200 com uma lista vazia.
+
 ### Exemplos
 
 **Filtrar despesas:**
@@ -298,7 +379,7 @@ Os schemas de saída utilizam a serialização do Pydantic, integrada ao FastAPI
 
 ## Testes automatizados
 
-O projeto possui **49 testes automatizados**, cobrindo:
+O projeto possui **54 testes automatizados**, cobrindo:
 
 - Endpoints REST
 - Operações CRUD
