@@ -31,3 +31,8 @@ class Transacao(Base):
         String(10),
         nullable=False
     )
+
+    categoria: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True
+    )

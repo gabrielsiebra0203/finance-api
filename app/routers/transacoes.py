@@ -83,6 +83,7 @@ def atualizar_transacao(
     transacao.descricao = dados.descricao
     transacao.valor = dados.valor
     transacao.tipo = dados.tipo
+    transacao.categoria = dados.categoria
 
     db.commit()
     db.refresh(transacao)
@@ -112,9 +113,3 @@ def excluir_transacao(
         "mensagem": "Transação excluída com sucesso",
         "id": transacao_id
     }
-
-
-    raise HTTPException(
-        status_code=404,
-        detail="Transação não encontrada"
-    )
