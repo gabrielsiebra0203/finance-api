@@ -3,14 +3,17 @@ from decimal import Decimal
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 
 
+
 from app.models import (
     TransacaoEntrada,
     TransacaoSaida,
     ListaTransacoesSaida,
     ResumoFinanceiroSaida,
+    RelatorioCategoriasSaida,
 )
-from app.services.resumo_financeiro import calcular_resumo_financeiro
 
+from app.services.resumo_financeiro import calcular_resumo_financeiro
+from app.services.relatorio_categorias import calcular_despesas_por_categoria
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 from datetime import date
@@ -230,6 +233,7 @@ def criar_transacao(
     description="Retorna o total de receitas, despesas e saldo financeiro."
 )
 
+
 def obter_resumo_financeiro(
     data_inicio: date | None = Query(
         default=None,
@@ -256,6 +260,45 @@ def obter_resumo_financeiro(
         data_inicio=data_inicio,
         data_fim=data_fim
     )
+
+
+@router.get(
+    "/relatorio/categorias",
+    response_model=RelatorioCategoriasSaida,
+    summary="Relatório de despesas por categoria",
+    description=(
+        "Retorna o total de despesas agrupadas por categoria, "
+        "ordenadas do maior para o menor valor."
+    )
+)
+
+def obter_relatorio_categorias(
+    data_inicio: date | None = Query(
+        default=None,
+        description="Data inicial do período (AAAA-MM-DD)"
+    ),
+    data_fim: date | None = Query(
+        default=None,
+        description="Data final do período (AAAA-MM-DD)"
+    ),
+    db: Session = Depends(get_db)
+):
+    if (
+        data_inicio is not None
+        and data_fim is not None
+        and data_inicio > data_fim
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="A data inicial não pode ser maior que a data final"
+        )
+
+    return calcular_despesas_por_categoria(
+        db=db,
+        data_inicio=data_inicio,
+        data_fim=data_fim
+    )
+
 
 
 

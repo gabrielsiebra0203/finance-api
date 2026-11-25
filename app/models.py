@@ -52,3 +52,11 @@ class ResumoFinanceiroSaida(BaseModel):
     total_despesas: Decimal
     saldo: Decimal
 
+
+class CategoriaResumoSaida(BaseModel):
+    categoria: str
+    total: Decimal
+
+
+class RelatorioCategoriasSaida(BaseModel):
+    categorias: list[CategoriaResumoSaida]

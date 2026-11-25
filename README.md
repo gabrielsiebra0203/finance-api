@@ -580,3 +580,74 @@ https://github.com/gabrielsiebra0203/finance-api
 **Gabriel Braga Siebra**
 
 Projeto desenvolvido como parte dos estudos práticos de desenvolvimento backend com Python, FastAPI e PostgreSQL.
+## Relatório de despesas por categoria
+
+A Finance API disponibiliza um endpoint para analisar despesas agrupadas por categoria, permitindo identificar quais áreas concentram os maiores gastos.
+
+### Endpoint
+
+`GET /transacoes/relatorio/categorias`
+
+O relatório utiliza consultas agregadas com SQLAlchemy e PostgreSQL, aplicando `SUM()`, `GROUP BY` e `ORDER BY`.
+
+### Exemplo de resposta
+
+```json
+{
+  "categorias": [
+    {
+      "categoria": "Moradia",
+      "total": "1600.00"
+    },
+    {
+      "categoria": "Alimentação",
+      "total": "470.00"
+    },
+    {
+      "categoria": "Transporte",
+      "total": "80.00"
+    }
+  ]
+}
+```
+
+Os valores são ilustrativos.
+
+### Filtros por período
+
+É possível informar uma data inicial, uma data final ou ambas.
+
+Exemplo:
+
+```http
+GET /transacoes/relatorio/categorias?data_inicio=2026-11-01&data_fim=2026-11-30
+```
+
+**Parâmetros:**
+
+- `data_inicio`: data inicial do período, inclusiva.
+- `data_fim`: data final do período, inclusiva.
+
+Os parâmetros utilizam o formato `AAAA-MM-DD`.
+
+### Regras de negócio
+
+- Somente transações do tipo `despesa` são consideradas.
+- Despesas da mesma categoria são somadas.
+- Os resultados são ordenados do maior para o menor valor.
+- Transações sem categoria são apresentadas como `Sem categoria`.
+- Sem filtros de datas, o relatório considera todas as despesas cadastradas.
+- Períodos sem despesas retornam `{"categorias": []}`.
+- Intervalos de datas inválidos retornam HTTP 422.
+
+### Testes automatizados
+
+Os testes verificam agrupamento, somatórios, exclusão de receitas, ordenação, filtros por período, intervalos vazios e validações.
+
+Executar:
+
+```bash
+python -m pytest -q
+```
+
+**Estado do projeto após o Dia 13: 92 testes automatizados aprovados.**
