@@ -651,3 +651,91 @@ python -m pytest -q
 ```
 
 **Estado do projeto após o Dia 13: 92 testes automatizados aprovados.**
+## Relatório financeiro mensal
+
+A Finance API disponibiliza um endpoint para consultar receitas, despesas e saldo agrupados por mês.
+
+A funcionalidade utiliza consultas agregadas com SQLAlchemy e PostgreSQL, permitindo analisar a evolução financeira ao longo do tempo.
+
+### Endpoint
+
+`GET /transacoes/relatorio/mensal`
+
+### Exemplo de resposta
+
+```json
+{
+  "meses": [
+    {
+      "mes": "2026-09",
+      "total_receitas": "3000.00",
+      "total_despesas": "1200.00",
+      "saldo": "1800.00"
+    },
+    {
+      "mes": "2026-10",
+      "total_receitas": "3500.00",
+      "total_despesas": "1500.00",
+      "saldo": "2000.00"
+    }
+  ]
+}
+```
+
+Os valores são ilustrativos.
+
+### Filtros disponíveis
+
+| Parâmetro | Descrição |
+|---|---|
+| `ano` | Filtra as transações de um ano específico |
+| `data_inicio` | Define a data inicial do período |
+| `data_fim` | Define a data final do período |
+
+Exemplo de consulta por ano:
+
+```http
+GET /transacoes/relatorio/mensal?ano=2026
+```
+
+Exemplo de consulta por período:
+
+```http
+GET /transacoes/relatorio/mensal?data_inicio=2026-10-01&data_fim=2026-11-30
+```
+
+Os filtros podem ser combinados.
+
+### Regras de negócio
+
+- As transações são agrupadas por ano e mês.
+- As receitas e despesas são somadas separadamente.
+- O saldo é calculado subtraindo as despesas das receitas.
+- Os resultados são ordenados cronologicamente.
+- Somente meses com transações são retornados.
+- Períodos sem transações retornam `{"meses": []}`.
+- Intervalos de datas inválidos retornam HTTP 422.
+- O ano deve estar entre 1 e 9999.
+
+### Tecnologias e conceitos
+
+- FastAPI para criação do endpoint.
+- Pydantic para validação das respostas.
+- SQLAlchemy para consultas agregadas.
+- PostgreSQL para armazenamento e processamento.
+- `date_trunc()` para agrupamento mensal.
+- `SUM()` e `CASE WHEN` para agregação condicional.
+- `Decimal` para precisão monetária.
+- Pytest para testes automatizados.
+
+### Testes automatizados
+
+Os testes verificam agrupamento mensal, cálculos financeiros, ordenação, filtros por ano e período, combinação de filtros, períodos vazios e intervalos inválidos.
+
+Para executar:
+
+```bash
+python -m pytest -q
+```
+
+**Estado do projeto após o Dia 14: 102 testes automatizados aprovados.**

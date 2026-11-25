@@ -4,14 +4,17 @@ from fastapi import APIRouter, HTTPException, status, Depends, Query
 
 
 
+
 from app.models import (
     TransacaoEntrada,
     TransacaoSaida,
     ListaTransacoesSaida,
     ResumoFinanceiroSaida,
     RelatorioCategoriasSaida,
+    RelatorioMensalSaida,
 )
 
+from app.services.relatorio_mensal import calcular_relatorio_mensal
 from app.services.resumo_financeiro import calcular_resumo_financeiro
 from app.services.relatorio_categorias import calcular_despesas_por_categoria
 from sqlalchemy import select, func
@@ -295,6 +298,51 @@ def obter_relatorio_categorias(
 
     return calcular_despesas_por_categoria(
         db=db,
+        data_inicio=data_inicio,
+        data_fim=data_fim
+    )
+
+
+@router.get(
+    "/relatorio/mensal",
+    response_model=RelatorioMensalSaida,
+    summary="Relatório financeiro mensal",
+    description=(
+        "Retorna receitas, despesas e saldo agrupados por mês, "
+        "ordenados cronologicamente."
+    )
+)
+
+def obter_relatorio_mensal(
+    ano: int | None = Query(
+        default=None,
+        ge=1,
+        le=9999,
+        description="Ano para filtrar o relatório"
+    ),
+    data_inicio: date | None = Query(
+        default=None,
+        description="Data inicial do período (AAAA-MM-DD)"
+    ),
+    data_fim: date | None = Query(
+        default=None,
+        description="Data final do período (AAAA-MM-DD)"
+    ),
+    db: Session = Depends(get_db)
+):
+    if (
+        data_inicio is not None
+        and data_fim is not None
+        and data_inicio > data_fim
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="A data inicial não pode ser maior que a data final"
+        )
+
+    return calcular_relatorio_mensal(
+        db=db,
+        ano=ano,
         data_inicio=data_inicio,
         data_fim=data_fim
     )

@@ -60,3 +60,14 @@ class CategoriaResumoSaida(BaseModel):
 
 class RelatorioCategoriasSaida(BaseModel):
     categorias: list[CategoriaResumoSaida]
+
+
+class ResumoMensalSaida(BaseModel):
+    mes: str
+    total_receitas: Decimal
+    total_despesas: Decimal
+    saldo: Decimal
+
+
+class RelatorioMensalSaida(BaseModel):
+    meses: list[ResumoMensalSaida]
