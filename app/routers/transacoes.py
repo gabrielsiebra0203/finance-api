@@ -13,7 +13,7 @@ from app.services.resumo_financeiro import calcular_resumo_financeiro
 
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
-
+from datetime import date
 from app.db_connection import get_db
 from app.db_models import Transacao
 
@@ -76,6 +76,17 @@ def listar_transacoes(
         description="Direção da ordenação: crescente ou decrescente"
     ),
 
+    data_inicio: date | None = Query(
+        default=None,
+        description="Data inicial do período (AAAA-MM-DD)"
+    ),
+
+    data_fim: date | None = Query(
+        default=None,
+        description="Data final do período (AAAA-MM-DD)"
+    ),
+
+
     db: Session = Depends(get_db)
 
 ):
@@ -88,6 +99,17 @@ def listar_transacoes(
             status_code=422,
             detail="O valor mínimo não pode ser maior que o valor máximo"
     )
+
+    if (
+        data_inicio is not None
+        and data_fim is not None
+        and data_inicio > data_fim
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="A data inicial não pode ser maior que a data final"
+        )
+
 
     comando = select(Transacao)
 
@@ -102,6 +124,17 @@ def listar_transacoes(
 
     if valor_max is not None:
         comando = comando.where(Transacao.valor <= valor_max)
+    
+    if data_inicio is not None:
+        comando = comando.where(
+            Transacao.data_transacao >= data_inicio
+        )
+
+    if data_fim is not None:
+        comando = comando.where(
+            Transacao.data_transacao <= data_fim
+        )
+    
 
     # Conta os registros após aplicar os filtros
     comando_contagem = select(func.count()).select_from(
@@ -167,13 +200,19 @@ def listar_transacoes(
     description="Cadastra uma receita ou despesa no banco de dados."
 )
 
+
 def criar_transacao(
     transacao: TransacaoEntrada,
     db: Session = Depends(get_db)
 ):
-    nova_transacao = Transacao(
-        **transacao.model_dump()
-    )
+    dados = transacao.model_dump()
+
+    # Se a data não foi informada, deixa o SQLAlchemy
+    # utilizar o valor padrão configurado no modelo.
+    if dados["data_transacao"] is None:
+        dados.pop("data_transacao")
+
+    nova_transacao = Transacao(**dados)
 
     db.add(nova_transacao)
     db.commit()
@@ -183,16 +222,41 @@ def criar_transacao(
 
 
 
+
 @router.get(
     "/resumo",
     response_model=ResumoFinanceiroSaida,
     summary="Consultar resumo financeiro",
     description="Retorna o total de receitas, despesas e saldo financeiro."
 )
+
 def obter_resumo_financeiro(
+    data_inicio: date | None = Query(
+        default=None,
+        description="Data inicial do período (AAAA-MM-DD)"
+    ),
+    data_fim: date | None = Query(
+        default=None,
+        description="Data final do período (AAAA-MM-DD)"
+    ),
     db: Session = Depends(get_db)
 ):
-    return calcular_resumo_financeiro(db)
+    if (
+        data_inicio is not None
+        and data_fim is not None
+        and data_inicio > data_fim
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="A data inicial não pode ser maior que a data final"
+        )
+
+    return calcular_resumo_financeiro(
+        db=db,
+        data_inicio=data_inicio,
+        data_fim=data_fim
+    )
+
 
 
 @router.get(
@@ -241,6 +305,8 @@ def atualizar_transacao(
     transacao.valor = dados.valor
     transacao.tipo = dados.tipo
     transacao.categoria = dados.categoria
+    if dados.data_transacao is not None:
+        transacao.data_transacao = dados.data_transacao
 
     db.commit()
     db.refresh(transacao)

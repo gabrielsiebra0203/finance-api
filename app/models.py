@@ -1,7 +1,7 @@
 
 from decimal import Decimal
 from typing import Literal
-
+from datetime import date
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -24,6 +24,7 @@ class TransacaoEntrada(BaseModel):
         min_length=1,
         max_length=50
     )
+    data_transacao: date | None = None
 
 
 class TransacaoSaida(BaseModel):
@@ -34,6 +35,7 @@ class TransacaoSaida(BaseModel):
     valor: Decimal
     tipo: Literal["receita", "despesa"]
     categoria: str | None = None
+    data_transacao: date
 
 
 

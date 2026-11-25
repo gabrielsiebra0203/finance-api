@@ -111,8 +111,89 @@ O resumo financeiro possui testes para os seguintes cenários:
 - Apenas receitas cadastradas.
 - Apenas despesas cadastradas.
 - Receitas e despesas combinadas.
+## Datas e relatórios por período
 
-**Total do projeto: 65 testes automatizados.**
+A Finance API permite cadastrar transações com datas específicas, consultar movimentações por intervalo e gerar resumos financeiros filtrados por período.
+
+### Cadastro de transações com data
+
+**Endpoint:** `POST /transacoes`
+
+Exemplo de requisição:
+
+```json
+{
+  "descricao": "Compra no supermercado",
+  "valor": "250.00",
+  "tipo": "despesa",
+  "categoria": "Alimentação",
+  "data_transacao": "2026-11-20"
+}
+```
+
+O campo `data_transacao` é opcional na criação. Quando não informado, a API utiliza a data atual.
+
+Na atualização por `PUT /transacoes/{transacao_id}`, a data existente é preservada quando o campo não é informado.
+
+### Consultar transações por período
+
+**Endpoint:** `GET /transacoes`
+
+Exemplo:
+
+```http
+GET /transacoes?data_inicio=2026-11-01&data_fim=2026-11-30
+```
+
+Parâmetros disponíveis:
+
+- `data_inicio`: data inicial do período, inclusiva.
+- `data_fim`: data final do período, inclusiva.
+
+Os filtros podem ser combinados com tipo, categoria, valores mínimo e máximo, paginação e ordenação.
+
+### Resumo financeiro por período
+
+**Endpoint:** `GET /transacoes/resumo`
+
+Exemplo:
+
+```http
+GET /transacoes/resumo?data_inicio=2026-11-01&data_fim=2026-11-30
+```
+
+Exemplo de resposta:
+
+```json
+{
+  "total_receitas": "4500.00",
+  "total_despesas": "2100.00",
+  "saldo": "2400.00"
+}
+```
+
+Quando nenhuma data é informada, o endpoint retorna o resumo financeiro geral.
+
+### Validações
+
+- Datas devem utilizar o formato `AAAA-MM-DD`.
+- A data inicial não pode ser posterior à data final.
+- Intervalos inválidos retornam HTTP 422.
+- Períodos sem transações retornam totais iguais a zero.
+
+### Tecnologias utilizadas
+
+- FastAPI e Pydantic para validação e documentação.
+- SQLAlchemy para consultas e filtros.
+- PostgreSQL para persistência.
+- Alembic para migrações de banco de dados.
+- Pytest para testes automatizados.
+
+A migração do campo `data_transacao` preserva os registros anteriores e preenche a nova coluna com uma data de referência.
+
+**Cobertura funcional:** 84 testes automatizados aprovados.
+
+**Total do projeto: 84 testes automatizados.**
 
 ## Estrutura do projeto
 

@@ -3,7 +3,9 @@ from decimal import Decimal
 
 from sqlalchemy import Numeric, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from datetime import date
 
+from sqlalchemy import Date, Numeric, String
 
 class Base(DeclarativeBase):
     pass
@@ -35,4 +37,10 @@ class Transacao(Base):
     categoria: Mapped[str | None] = mapped_column(
         String(50),
         nullable=True
+    )
+
+    data_transacao: Mapped[date] = mapped_column(
+        Date,
+        nullable=False,
+        default=date.today
     )

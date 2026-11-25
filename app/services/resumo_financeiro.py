@@ -1,4 +1,5 @@
 
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy import select, func
@@ -9,7 +10,9 @@ from app.models import ResumoFinanceiroSaida
 
 
 def calcular_resumo_financeiro(
-    db: Session
+    db: Session,
+    data_inicio: date | None = None,
+    data_fim: date | None = None
 ) -> ResumoFinanceiroSaida:
 
     consulta_receitas = select(
@@ -23,6 +26,26 @@ def calcular_resumo_financeiro(
     ).where(
         Transacao.tipo == "despesa"
     )
+
+    # Aplicar filtro de data inicial
+    if data_inicio is not None:
+        consulta_receitas = consulta_receitas.where(
+            Transacao.data_transacao >= data_inicio
+        )
+
+        consulta_despesas = consulta_despesas.where(
+            Transacao.data_transacao >= data_inicio
+        )
+
+    # Aplicar filtro de data final
+    if data_fim is not None:
+        consulta_receitas = consulta_receitas.where(
+            Transacao.data_transacao <= data_fim
+        )
+
+        consulta_despesas = consulta_despesas.where(
+            Transacao.data_transacao <= data_fim
+        )
 
     total_receitas = db.scalar(consulta_receitas)
     total_despesas = db.scalar(consulta_despesas)
